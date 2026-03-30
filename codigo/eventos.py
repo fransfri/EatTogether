@@ -34,7 +34,7 @@ def editar_evento(ide, nombre, fecha_hora, descripcion, lugar="", estado="Planif
 
 def eliminar_evento(ide):
     with obtener_conexion() as db:
-        db.execute("DELETE FROM menus WHERE evento_id = ?", (ide,))
+        db.execute("DELETE FROM evento_menus WHERE evento_id = ?", (ide,))
         db.execute("DELETE FROM invitados WHERE evento_id = ?", (ide,))
         db.execute("DELETE FROM eventos WHERE id = ?", (ide,))
         db.commit()

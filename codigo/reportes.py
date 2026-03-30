@@ -22,11 +22,11 @@ def mostrar_reportes():
             ):
                 print(f" -> {m['descripcion']} (Precio: {m['precio']})")
             print("Invitados:")
-            sql = ("SELECT p.nombre persona, m.descripcion menu "
+            sql = ("SELECT p.nombre persona, p.notas, m.descripcion menu "
                    "FROM invitados i "
                    "JOIN personas p ON p.id=i.persona_id "
                    "JOIN menus m ON m.id=i.menu_id "
                    "WHERE i.evento_id = ?")
             for inv in db.execute(sql, (e['id'],)):
-                print(f" -> {inv['persona']} | Menú: {inv['menu']}")
+                print(f" -> {inv['persona']} | Notas: {inv['notas']} | Menú: {inv['menu']}")
     print("----------------------------------------")

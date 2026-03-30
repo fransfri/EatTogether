@@ -239,10 +239,9 @@ class EatTogetherApp:
             return db.execute("SELECT id, nombre, fecha_hora, descripcion FROM eventos").fetchall()
 
     def add_evento(self):
-        # Crear ventana de diálogo personalizada
         dialog = tk.Toplevel(self.root)
         dialog.title("Nuevo Evento")
-        dialog.geometry("450x500")
+        dialog.geometry("450x520")
         dialog.resizable(False, False)
 
         # Nombre
@@ -258,20 +257,17 @@ class EatTogetherApp:
         tk.Label(fecha_frame, text="Año:").grid(row=0, column=0)
         year_spin = tk.Spinbox(fecha_frame, from_=1900, to=2100, width=5)
         year_spin.grid(row=0, column=1)
-        year_spin.delete(0, tk.END)
-        year_spin.insert(0, "2026")
+        year_spin.delete(0, tk.END); year_spin.insert(0, "2026")
 
         tk.Label(fecha_frame, text="Mes:").grid(row=0, column=2)
         month_spin = tk.Spinbox(fecha_frame, from_=1, to=12, width=3)
         month_spin.grid(row=0, column=3)
-        month_spin.delete(0, tk.END)
-        month_spin.insert(0, "1")
+        month_spin.delete(0, tk.END); month_spin.insert(0, "1")
 
         tk.Label(fecha_frame, text="Día:").grid(row=0, column=4)
         day_spin = tk.Spinbox(fecha_frame, from_=1, to=31, width=3)
         day_spin.grid(row=0, column=5)
-        day_spin.delete(0, tk.END)
-        day_spin.insert(0, "1")
+        day_spin.delete(0, tk.END); day_spin.insert(0, "1")
 
         # Estado
         tk.Label(dialog, text="Estado *").grid(row=2, column=0, padx=10, pady=5, sticky="w")
@@ -340,42 +336,34 @@ class EatTogetherApp:
         dialog.grab_set()
         self.root.wait_window(dialog)
 
-        dialog.transient(self.root)
-        dialog.grab_set()
-        self.root.wait_window(dialog)
-
     def edit_evento(self):
         selected = self.eventos_tree.selection()
         if not selected:
             messagebox.showwarning("Advertencia", "Selecciona un evento.")
             return
+
         item = self.eventos_tree.item(selected)
         ide = item['values'][0]
         evento = obtener_evento(ide)
+        if not evento:
+            messagebox.showerror("Error", "Evento no encontrado.")
+            return
 
-        # Parsear fecha_hora
+        # Convertir sqlite3.Row a diccionario para evitar .get() fallando
         try:
-            dt = datetime.strptime(evento['fecha_hora'], "%Y-%m-%d %H:%M")
-            initial_year = str(dt.year)
-            initial_month = str(dt.month)
-            initial_day = str(dt.day)
-            initial_hora = f"{dt.hour:02d}:{dt.minute:02d}"
-        except:
-            initial_year = "2026"
-            initial_month = "1"
-            initial_day = "1"
-            initial_hora = "12:00"
+            evento = dict(evento)
+        except Exception:
+            pass
 
-        # Crear ventana de diálogo
         dialog = tk.Toplevel(self.root)
         dialog.title("Editar Evento")
-        dialog.geometry("450x500")
+        dialog.geometry("450x520")
         dialog.resizable(False, False)
 
         # Nombre
         tk.Label(dialog, text="Nombre del evento *").grid(row=0, column=0, padx=10, pady=5, sticky="w")
         nombre_entry = tk.Entry(dialog, width=35)
-        nombre_entry.insert(0, evento['nombre'])
+        nombre_entry.insert(0, evento.get('nombre', ''))
         nombre_entry.grid(row=0, column=1, padx=10, pady=5)
 
         # Fecha
@@ -385,21 +373,25 @@ class EatTogetherApp:
 
         tk.Label(fecha_frame, text="Año:").grid(row=0, column=0)
         year_spin = tk.Spinbox(fecha_frame, from_=1900, to=2100, width=5)
-        year_spin.delete(0, tk.END)
-        year_spin.insert(0, initial_year)
         year_spin.grid(row=0, column=1)
 
         tk.Label(fecha_frame, text="Mes:").grid(row=0, column=2)
         month_spin = tk.Spinbox(fecha_frame, from_=1, to=12, width=3)
-        month_spin.delete(0, tk.END)
-        month_spin.insert(0, initial_month)
         month_spin.grid(row=0, column=3)
 
         tk.Label(fecha_frame, text="Día:").grid(row=0, column=4)
         day_spin = tk.Spinbox(fecha_frame, from_=1, to=31, width=3)
-        day_spin.delete(0, tk.END)
-        day_spin.insert(0, initial_day)
         day_spin.grid(row=0, column=5)
+
+        try:
+            dt = datetime.strptime(evento.get('fecha_hora', ''), "%Y-%m-%d %H:%M")
+            year_spin.delete(0, tk.END); year_spin.insert(0, str(dt.year))
+            month_spin.delete(0, tk.END); month_spin.insert(0, str(dt.month))
+            day_spin.delete(0, tk.END); day_spin.insert(0, str(dt.day))
+        except Exception:
+            year_spin.delete(0, tk.END); year_spin.insert(0, "2026")
+            month_spin.delete(0, tk.END); month_spin.insert(0, "1")
+            day_spin.delete(0, tk.END); day_spin.insert(0, "1")
 
         # Estado
         tk.Label(dialog, text="Estado *").grid(row=2, column=0, padx=10, pady=5, sticky="w")
@@ -412,7 +404,11 @@ class EatTogetherApp:
         tk.Label(dialog, text="Hora *").grid(row=3, column=0, padx=10, pady=5, sticky="w")
         horas = [f"{h:02d}:{m:02d}" for h in range(24) for m in (0, 30)]
         hora_var = tk.StringVar(dialog)
-        hora_var.set(initial_hora)
+        try:
+            dt = datetime.strptime(evento.get('fecha_hora', ''), "%Y-%m-%d %H:%M")
+            hora_var.set(f"{dt.hour:02d}:{dt.minute:02d}")
+        except Exception:
+            hora_var.set("12:00")
         hora_menu = tk.OptionMenu(dialog, hora_var, *horas)
         hora_menu.grid(row=3, column=1, padx=10, pady=5, sticky="w")
 
@@ -425,7 +421,7 @@ class EatTogetherApp:
         # Descripción
         tk.Label(dialog, text="Descripción *").grid(row=5, column=0, padx=10, pady=5, sticky="nw")
         desc_text = tk.Text(dialog, width=35, height=4)
-        desc_text.insert("1.0", evento['descripcion'])
+        desc_text.insert("1.0", evento.get('descripcion', ''))
         desc_text.grid(row=5, column=1, padx=10, pady=5)
 
         def on_ok():
@@ -439,7 +435,7 @@ class EatTogetherApp:
                 day = int(day_spin.get())
                 fecha_str = f"{year:04d}-{month:02d}-{day:02d}"
                 datetime.strptime(fecha_str, "%Y-%m-%d")
-            except:
+            except Exception:
                 messagebox.showerror("Error", "Fecha inválida.")
                 return
             hora = hora_var.get()
@@ -469,19 +465,26 @@ class EatTogetherApp:
         dialog.transient(self.root)
         dialog.grab_set()
         self.root.wait_window(dialog)
-        self.root.wait_window(dialog)
 
     def delete_evento(self):
-        selected = self.eventos_tree.selection()
-        if not selected:
-            messagebox.showwarning("Advertencia", "Selecciona un evento.")
+        if getattr(self, '_is_deleting_evento', False):
             return
-        if messagebox.askyesno("Confirmar", "¿Eliminar evento?"):
-            item = self.eventos_tree.item(selected)
-            ide = item['values'][0]
-            eliminar_evento(ide)
-            messagebox.showinfo("Éxito", "Evento eliminado.")
-            self.list_eventos()
+        self._is_deleting_evento = True
+        try:
+            selected = self.eventos_tree.selection()
+            if not selected:
+                messagebox.showwarning("Advertencia", "Selecciona un evento.")
+                return
+            # Evitamos que el cierre del messagebox con Enter vuelva a disparar el botón
+            self.root.focus()
+            if messagebox.askyesno("Confirmar", "¿Eliminar evento?"):
+                item = self.eventos_tree.item(selected)
+                ide = item['values'][0]
+                eliminar_evento(ide)
+                messagebox.showinfo("Éxito", "Evento eliminado.")
+                self.list_eventos()
+        finally:
+            self._is_deleting_evento = False
 
     def asignar_menus_evento(self):
         """Permite asignar múltiples menús a un evento seleccionado."""
