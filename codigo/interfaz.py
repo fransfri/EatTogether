@@ -130,7 +130,7 @@ class EatTogetherApp:
         tk.Label(card_frame, text="MENÚS", font=("Arial", 10, "bold"), fg="gray", bg="white").pack(pady=5)
         menu_frame = tk.Frame(card_frame, bg="white")
         menu_frame.pack(pady=10)
-        tk.Label(menu_frame, text="🝴", font=("Arial", 24), bg="white").pack(side=tk.LEFT, padx=5)
+        tk.Label(menu_frame, text="🍽️", font=("Arial", 24), bg="white").pack(side=tk.LEFT, padx=5)
         tk.Label(menu_frame, text=str(len(menus)), font=("Arial", 20, "bold"), bg="white").pack(side=tk.LEFT, padx=10)
         
         # Tarjeta Invitaciones
